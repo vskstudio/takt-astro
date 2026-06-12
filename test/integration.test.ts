@@ -49,13 +49,15 @@ describe('injected runtime content', () => {
     expect(content).toContain('"endpoint":"/collect"')
   })
 
-  it('uses exactly one pageview source: core SPA, not an astro:page-load listener', () => {
+  it('drives SPA pageviews from astro:after-swap, never core history patching', () => {
     const { content } = setup()
-    // Core's enableSpa (via init with auto:true) patches history.pushState, which
-    // Astro's ClientRouter uses — so a page-load listener would double-count.
+    // Core's history patch over-counts under Astro (ClientRouter runs several
+    // history ops per nav), so auto is forced off and after-swap is the SPA
+    // source — exactly one pageview per navigation, and never page-load.
     expect(content).toContain('init(o)')
+    expect(content).toContain('"auto":false')
+    expect(content).toContain("astro:after-swap")
     expect(content).not.toContain('astro:page-load')
-    expect(content).not.toContain('pageview(')
   })
 
   it('guards against SSR/prerender (no window)', () => {
@@ -68,12 +70,17 @@ describe('injected runtime content', () => {
     expect(content).toContain('window.__takt')
   })
 
-  it('relies on init() for the initial pageview without firing another', () => {
+  it('fires the initial pageview explicitly (auto disabled)', () => {
     const { content } = setup()
-    // init() (auto:true) fires the initial pageview; the runtime must not call
-    // pageview() itself, which would double-count the first load.
+    // auto is off, so init() does not fire the initial view; the runtime does.
     expect(content).toContain('init(o)')
-    expect(content).not.toContain('pageview(')
+    expect(content).toContain('pageview();')
+  })
+
+  it('omits the SPA listener when spa is disabled', () => {
+    const { content } = setup({ spa: false })
+    expect(content).toContain('pageview();')
+    expect(content).not.toContain('astro:after-swap')
   })
 })
 
@@ -104,9 +111,9 @@ describe('option resolution & defaults', () => {
     expect(r.files).toBe(true)
   })
 
-  it('serializes spa default as auto:true in the runtime', () => {
+  it('always serializes auto:false in the runtime (Astro drives pageviews itself)', () => {
     const { content } = setup()
-    expect(content).toContain('"auto":true')
+    expect(content).toContain('"auto":false')
   })
 })
 

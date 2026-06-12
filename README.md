@@ -53,7 +53,7 @@ Both the integration and the component accept the same options:
 
 ## View Transitions
 
-Astro's client router navigates via `history.pushState`. Core's SPA tracking patches `pushState`, so a single pageview fires per client navigation — including View Transitions DOM swaps — while `init()` fires the one initial pageview. That single source means navigations are never double-counted. The runtime is SSR/prerender safe — it only runs in the browser.
+Astro's client router runs several history operations per navigation (scroll-restoration `replaceState` plus `pushState`), so Takt does **not** rely on core's history patch here — it would over-count. Instead the runtime fires one explicit initial pageview and then one per Astro `astro:after-swap` event (including View Transitions DOM swaps and back/forward), so each navigation is counted exactly once. On a plain MPA (no client router) the script re-runs per page load, which fires the initial pageview each time. The runtime is SSR/prerender safe — it only runs in the browser.
 
 ## Custom events
 

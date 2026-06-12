@@ -32,5 +32,9 @@ test('tracks SPA navigation as a new pageview', async ({ page }) => {
   // The Astro ClientRouter intercepts the link and navigates via history.pushState,
   // which core's SPA patch turns into a second pageview.
   await page.click('#nav')
+  await page.waitForURL('**/about')
   await expect.poll(() => events.filter((e) => e.n === 'pageview').length).toBeGreaterThanOrEqual(2)
+  // Settle: ensure no further (duplicate) pageviews trickle in for this single nav.
+  await page.waitForTimeout(500)
+  expect(events.filter((e) => e.n === 'pageview').length).toBe(2)
 })
