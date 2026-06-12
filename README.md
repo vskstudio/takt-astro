@@ -53,7 +53,7 @@ Both the integration and the component accept the same options:
 
 ## View Transitions
 
-When Astro swaps the DOM on a client navigation there is no full reload, so the runtime listens for `astro:page-load` and fires a pageview on every navigation. The first `astro:page-load` (which coincides with the initial load already counted by `init()`) is skipped, so the first page is never double-counted. The runtime is SSR/prerender safe — it only runs in the browser.
+Astro's client router navigates via `history.pushState`. Core's SPA tracking patches `pushState`, so a single pageview fires per client navigation — including View Transitions DOM swaps — while `init()` fires the one initial pageview. That single source means navigations are never double-counted. The runtime is SSR/prerender safe — it only runs in the browser.
 
 ## Custom events
 
