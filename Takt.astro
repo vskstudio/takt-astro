@@ -1,10 +1,33 @@
 ---
-import { resolveOptions, type TaktOptions } from './src/options'
-import { buildRuntime } from './src/runtime'
+// Import from the built output: the published package ships dist/ + this file,
+// not src/, so a src import would break on install.
+import { resolveOptions, type TaktOptions } from './dist/index.js'
 
 type Props = TaktOptions
 
-const runtime = buildRuntime(resolveOptions(Astro.props))
+// Options travel as a JSON data island, NOT interpolated into JS, so a domain or
+// endpoint containing `</script>`/quotes can't break out. `<` is escaped so the
+// value can't terminate the island's <script> tag either.
+const config = JSON.stringify(resolveOptions(Astro.props))
+  .replace(/</g, '\\u003c')
+  .replace(/>/g, '\\u003e')
+  .replace(/&/g, '\\u0026')
 ---
 <!-- Pick ONE install path — this component OR the integration — not both. -->
-<script is:inline type="module" set:html={runtime}></script>
+<script type="application/json" data-takt-config set:html={config}></script>
+<!-- A bundled (non-inline) module so Astro resolves the bare core import; an
+     is:inline module would leave it unresolved in the browser. -->
+<script>
+  import { init, pageview } from '@vskstudio/takt-core'
+  const el = document.querySelector('script[data-takt-config]')
+  const w = window as unknown as { __takt?: boolean }
+  if (el && !w.__takt) {
+    const o = JSON.parse(el.textContent || '{}')
+    w.__takt = true
+    // auto forced off: Astro's ClientRouter runs several history ops per nav, so
+    // core's history patch would over-count. Drive pageviews from after-swap.
+    init({ ...o, auto: false })
+    pageview()
+    if (o.auto !== false) document.addEventListener('astro:after-swap', () => pageview())
+  }
+</script>

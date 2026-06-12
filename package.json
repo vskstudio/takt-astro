@@ -1,23 +1,46 @@
 {
   "name": "@vskstudio/takt-astro",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Astro integration for Takt privacy-friendly analytics",
   "license": "MIT",
   "author": "VSK Studio",
   "type": "module",
   "types": "./dist/index.d.ts",
-  "keywords": ["analytics", "privacy", "astro", "astro-integration", "withastro", "takt"],
+  "keywords": [
+    "analytics",
+    "privacy",
+    "astro",
+    "astro-integration",
+    "withastro",
+    "takt"
+  ],
   "homepage": "https://github.com/vskstudio/takt-astro#readme",
-  "repository": { "type": "git", "url": "git+https://github.com/vskstudio/takt-astro.git" },
-  "bugs": { "url": "https://github.com/vskstudio/takt-astro/issues" },
-  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vskstudio/takt-astro.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vskstudio/takt-astro/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
     "./Takt.astro": "./Takt.astro",
     "./package.json": "./package.json"
   },
-  "files": ["dist", "Takt.astro"],
-  "engines": { "node": ">=18" },
+  "files": [
+    "dist",
+    "Takt.astro"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",

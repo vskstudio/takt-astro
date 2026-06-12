@@ -8,3 +8,5 @@ playwright-report
 .astro
 e2e/app/dist
 e2e/app/.astro
+e2e/app-component/dist
+e2e/app-component/.astro
