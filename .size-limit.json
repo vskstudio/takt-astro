@@ -1,0 +1,3 @@
+[
+  { "name": "integration (gzip, astro + core external)", "path": "dist/index.js", "limit": "2 kB", "gzip": true }
+]

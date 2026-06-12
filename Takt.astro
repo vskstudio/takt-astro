@@ -1,0 +1,10 @@
+---
+import { resolveOptions, type TaktOptions } from './src/options'
+import { buildRuntime } from './src/runtime'
+
+type Props = TaktOptions
+
+const runtime = buildRuntime(resolveOptions(Astro.props))
+---
+<!-- Pick ONE install path — this component OR the integration — not both. -->
+<script is:inline type="module" set:html={runtime}></script>
