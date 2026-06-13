@@ -1,0 +1,16 @@
+---
+import { embedUrl, type EmbedTheme, type WidgetLang } from '@vskstudio/takt-core'
+
+type Props = {
+  domain: string
+  theme?: EmbedTheme
+  lang?: WidgetLang
+  host?: string
+  width?: number | string
+  height?: number | string
+  title?: string
+}
+
+const { domain, theme, lang, host, width = 404, height = 264, title = 'takt', ...rest } = Astro.props
+---
+<iframe src={embedUrl(domain, { theme, lang, host })} title={title} width={width} height={height} loading="lazy" style="border:0" {...rest}></iframe>

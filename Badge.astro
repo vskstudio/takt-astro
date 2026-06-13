@@ -1,0 +1,14 @@
+---
+import { badgeUrl, type BadgeVariant, type BadgeGlyph, type WidgetLang } from '@vskstudio/takt-core'
+
+type Props = {
+  domain: string
+  variant?: BadgeVariant
+  glyph?: BadgeGlyph
+  lang?: WidgetLang
+  host?: string
+}
+
+const { domain, variant, glyph, lang, host, ...rest } = Astro.props
+---
+<img src={badgeUrl(domain, { variant, glyph, lang, host })} alt="takt" loading="lazy" decoding="async" {...rest} />

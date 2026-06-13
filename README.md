@@ -65,6 +65,32 @@ import { track } from '@vskstudio/takt-astro'
 track('Signup', { revenue: { amount: '9.00', currency: 'USD' } })
 ```
 
+## Widgets
+
+Thin wrappers around Takt's server-rendered badge SVG and embed iframe.
+
+```astro
+---
+import Badge from '@vskstudio/takt-astro/Badge.astro'
+import Embed from '@vskstudio/takt-astro/Embed.astro'
+---
+<Badge domain="example.com" variant="d" />
+<Embed domain="example.com" theme="dark" />
+```
+
+`Badge` renders an `<img>` (props: `domain`, `variant`, `glyph`, `lang`, `host`); `Embed` renders an `<iframe>` (props: `domain`, `theme`, `lang`, `host`, `width`, `height`, `title`). Extra attributes pass through to the underlying element.
+
+## Public stats
+
+`createStats` (re-exported from core) reads public analytics:
+
+```js
+import { createStats } from '@vskstudio/takt-astro'
+
+const stats = createStats({ domain: 'example.com' })
+const summary = await stats.summary({ period: '7d' })
+```
+
 ## License
 
 MIT
