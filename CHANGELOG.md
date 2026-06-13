@@ -1,5 +1,11 @@
 # @vskstudio/takt-astro
 
+## 0.3.1
+
+### Patch Changes
+
+- Lock the widget `src` so consumer attributes can't override the built URL, and add `referrerpolicy="strict-origin-when-cross-origin"` to the embed iframe.
+
 ## 0.3.0
 
 ### Minor Changes

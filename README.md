@@ -78,7 +78,7 @@ import Embed from '@vskstudio/takt-astro/Embed.astro'
 <Embed domain="example.com" theme="dark" />
 ```
 
-`Badge` renders an `<img>` (props: `domain`, `variant`, `glyph`, `lang`, `host`); `Embed` renders an `<iframe>` (props: `domain`, `theme`, `lang`, `host`, `width`, `height`, `title`). Extra attributes pass through to the underlying element.
+`Badge` renders an `<img>` (props: `domain`, `variant`, `glyph`, `lang`, `host`); `Embed` renders an `<iframe>` (props: `domain`, `theme`, `lang`, `host`, `width`, `height`, `title`). Extra attributes pass through to the underlying element, but the built `src` is locked and cannot be overridden. The optional `host` must be an absolute `http(s)` URL — core validates it and throws on anything else (e.g. a `javascript:` URL).
 
 ## Public stats
 

@@ -11,4 +11,4 @@ type Props = {
 
 const { domain, variant, glyph, lang, host, ...rest } = Astro.props
 ---
-<img src={badgeUrl(domain, { variant, glyph, lang, host })} alt="takt" loading="lazy" decoding="async" {...rest} />
+<img alt="takt" {...rest} loading="lazy" decoding="async" src={badgeUrl(domain, { variant, glyph, lang, host })} />
