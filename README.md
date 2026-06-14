@@ -78,7 +78,7 @@ import Embed from '@vskstudio/takt-astro/Embed.astro'
 <Embed domain="example.com" theme="dark" />
 ```
 
-`Badge` renders an `<img>` (props: `domain`, `variant`, `glyph`, `lang`, `host`); `Embed` renders an `<iframe>` (props: `domain`, `theme`, `lang`, `host`, `width`, `height`, `title`). Extra attributes pass through to the underlying element, but the built `src` is locked and cannot be overridden. The optional `host` must be an absolute `http(s)` URL — core validates it and throws on anything else (e.g. a `javascript:` URL).
+`Badge` renders an `<img>` (props: `domain`, `variant`, `glyph`, `lang`, `host`). Its `alt` defaults to `"takt"` and can be overridden. `Embed` renders an `<iframe>` (props: `domain`, `theme`, `lang`, `host`, `width`, `height`, `title`); the iframe is sandboxed (`allow-scripts allow-same-origin`) and ships a fixed `referrerpolicy="strict-origin-when-cross-origin"` — both are locked and cannot be weakened by a consumer. Extra attributes pass through to the underlying element, but the built `src` is locked and cannot be overridden. The optional `host` must be an absolute `http(s)` URL — core validates it and throws on anything else (e.g. a `javascript:` URL), and reduces it to its origin (dropping path/query). An empty `host` resolves same-origin.
 
 ## Public stats
 
