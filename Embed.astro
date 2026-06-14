@@ -13,4 +13,4 @@ type Props = {
 
 const { domain, theme, lang, host, width = 404, height = 264, title = 'takt', ...rest } = Astro.props
 ---
-<iframe title={title} referrerpolicy="strict-origin-when-cross-origin" {...rest} width={width} height={height} loading="lazy" style="border:0" src={embedUrl(domain, { theme, lang, host })}></iframe>
+<iframe title={title} {...rest} width={width} height={height} loading="lazy" style="border:0" src={embedUrl(domain, { theme, lang, host })} referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin"></iframe>
