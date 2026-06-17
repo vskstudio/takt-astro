@@ -1,6 +1,6 @@
 {
   "name": "@vskstudio/takt-astro",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Astro integration for Takt privacy-friendly analytics",
   "license": "MIT",
   "author": "VSK Studio",
@@ -56,14 +56,14 @@
     "release": "pnpm build && changeset publish"
   },
   "peerDependencies": {
-    "@vskstudio/takt-core": ">=0.3.1",
+    "@vskstudio/takt-core": ">=0.4.0",
     "astro": ">=4"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
     "@playwright/test": "^1.50.0",
     "@size-limit/preset-small-lib": "^11.1.6",
-    "@vskstudio/takt-core": "^0.3.2",
+    "@vskstudio/takt-core": "^0.4.0",
     "astro": "^5.0.0",
     "eslint": "^9.0.0",
     "size-limit": "^11.1.6",

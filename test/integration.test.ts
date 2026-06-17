@@ -49,6 +49,11 @@ describe('injected runtime content', () => {
     expect(content).toContain('"endpoint":"/collect"')
   })
 
+  it('embeds scriptOrigin so core can derive the first-party endpoint', () => {
+    const { content } = setup({ scriptOrigin: 'https://t.example.com' })
+    expect(content).toContain('"scriptOrigin":"https://t.example.com"')
+  })
+
   it('drives SPA pageviews from astro:after-swap, never core history patching', () => {
     const { content } = setup()
     // Core's history patch over-counts under Astro (ClientRouter runs several

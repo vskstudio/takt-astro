@@ -9,6 +9,11 @@ export interface TaktOptions {
   domain?: string
   /** Ingestion endpoint. Defaults to `/api/event`. */
   endpoint?: string
+  /**
+   * First-party origin to derive the endpoint from (`{origin}/api/event`) — your
+   * Takt domain or a custom domain to dodge ad-blockers. `endpoint` wins over it.
+   */
+  scriptOrigin?: string
   /** Auto-track outbound link clicks. */
   outbound?: boolean
   /** Auto-track file downloads. */
@@ -25,6 +30,7 @@ export function resolveOptions(options: TaktOptions = {}): InitOptions {
   return {
     domain: options.domain,
     endpoint: options.endpoint,
+    scriptOrigin: options.scriptOrigin,
     outbound: options.outbound ?? false,
     files: options.files ?? false,
     respectDnt: options.respectDnt ?? true,
