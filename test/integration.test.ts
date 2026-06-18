@@ -94,6 +94,7 @@ describe('option resolution & defaults', () => {
     expect(resolveOptions()).toMatchObject({
       outbound: false,
       files: false,
+      notFound: false,
       respectDnt: true,
       excludeLocalhost: true,
       auto: true,
@@ -114,6 +115,11 @@ describe('option resolution & defaults', () => {
     const r = resolveOptions({ outbound: true, files: true })
     expect(r.outbound).toBe(true)
     expect(r.files).toBe(true)
+  })
+
+  it('maps track404 to core notFound, only when enabled', () => {
+    expect(resolveOptions().notFound).toBe(false)
+    expect(resolveOptions({ track404: true }).notFound).toBe(true)
   })
 
   it('always serializes auto:false in the runtime (Astro drives pageviews itself)', () => {

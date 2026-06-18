@@ -48,6 +48,7 @@ Both the integration and the component accept the same options:
 | `scriptOrigin` | `string` | – | First-party origin to derive the endpoint from (`{origin}/api/event`) — your Takt domain or a custom domain to dodge ad-blockers (endpoint wins over it). |
 | `outbound` | `boolean` | `false` | Auto-track outbound link clicks. |
 | `files` | `boolean` | `false` | Auto-track file downloads. |
+| `track404` | `boolean` | `false` | Report a `404` event when the page is an error page (`[data-takt-404]` / `<meta name="takt:404">` marker, or a 404 HTTP status). |
 | `spa` | `boolean` | `true` | Track client-side navigations. |
 | `respectDnt` | `boolean` | `true` | Suppress events when Do Not Track is on. |
 | `excludeLocalhost` | `boolean` | `true` | Suppress events on localhost / private IPs. |

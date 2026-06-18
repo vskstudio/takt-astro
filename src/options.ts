@@ -18,6 +18,11 @@ export interface TaktOptions {
   outbound?: boolean
   /** Auto-track file downloads. */
   files?: boolean
+  /**
+   * Report a `404` event when the page is an error page (`[data-takt-404]` /
+   * `<meta name="takt:404">` marker, or a 404 HTTP status).
+   */
+  track404?: boolean
   /** Track client-side navigations (history + Astro View Transitions). Default `true`. */
   spa?: boolean
   /** Suppress events when the browser's Do Not Track is enabled. Default `true`. */
@@ -33,6 +38,7 @@ export function resolveOptions(options: TaktOptions = {}): InitOptions {
     scriptOrigin: options.scriptOrigin,
     outbound: options.outbound ?? false,
     files: options.files ?? false,
+    notFound: options.track404 ?? false,
     respectDnt: options.respectDnt ?? true,
     excludeLocalhost: options.excludeLocalhost ?? true,
     auto: options.spa ?? true,
