@@ -1,5 +1,12 @@
 # @vskstudio/takt-astro
 
+## 0.5.0
+
+### Minor Changes
+
+- dfe06bd: Expose advanced tracker options: enabled, sampleRate, trackQuery, queryParams,
+  scrubUrl (function, build-time stringified / config only) and tagged. Peer dep raised to takt-core >=0.5.0.
+
 ## 0.3.1
 
 ### Patch Changes
