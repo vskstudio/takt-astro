@@ -5,8 +5,11 @@ import type { InitOptions } from '@vskstudio/takt-core'
  *
  * Returned as a source string because Astro's `injectScript` and the `<Takt />`
  * component both take a raw module body.
+ *
+ * `scrubUrl` is threaded separately because it is a function: `JSON.stringify`
+ * would silently drop it, so it is embedded as raw JS via `.toString()` instead.
  */
-export function buildRuntime(options: InitOptions): string {
+export function buildRuntime(options: InitOptions, scrubUrl?: (url: string) => string): string {
   // SPA tracking is requested unless core's `auto` was explicitly disabled.
   const spa = options.auto !== false
   // `<` is escaped so a domain/endpoint containing `</script>` (or `<!--`) cannot
@@ -22,12 +25,17 @@ export function buildRuntime(options: InitOptions): string {
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e')
     .replace(/&/g, '\\u0026')
+  // `scrubUrl` is a function, so it bypasses the JSON above and is stitched in as
+  // raw JS via `.toString()`. It MUST be self-contained (no closure/outer-scope
+  // references): it is stringified here at build time and re-evaluated in the
+  // browser, where the surrounding scope no longer exists.
+  const config = scrubUrl ? `Object.assign(${json}, { scrubUrl: ${scrubUrl.toString()} })` : json
   return [
     `import { init, pageview } from '@vskstudio/takt-core';`,
     // SSR/prerender guard: this module is evaluated under Node when Astro
     // prerenders, where window/init's browser APIs are absent.
     `if (typeof window !== 'undefined' && !window.__takt) {`,
-    `  const o = ${json};`,
+    `  const o = ${config};`,
     // Idempotent across both entry paths (integration + <Takt/>): the flag stops
     // a second boot from re-registering listeners or re-firing the initial view.
     `  window.__takt = true;`,

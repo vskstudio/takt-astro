@@ -29,8 +29,30 @@ export interface TaktOptions {
   respectDnt?: boolean
   /** Suppress events on localhost and private IP ranges. Default `true`. */
   excludeLocalhost?: boolean
+  /** Master kill switch — when `false`, every event is suppressed. */
+  enabled?: boolean
+  /** Fraction of visitors to track, `0`–`1`. Defaults to tracking everyone. */
+  sampleRate?: number
+  /** Send the full query string with pageviews instead of stripping it. */
+  trackQuery?: boolean
+  /** Whitelist of query params to keep when `trackQuery` is off. */
+  queryParams?: string[]
+  /**
+   * Rewrite each URL before it is sent (e.g. strip a fragment or PII).
+   * MUST be a self-contained function: it is stringified at build time and
+   * re-evaluated in the browser, so it cannot reference closure/outer-scope
+   * variables. Never build it from user input.
+   */
+  scrubUrl?: (url: string) => string
+  /** Auto-track elements marked with `data-takt-event`. */
+  tagged?: boolean
 }
 
+/**
+ * Map user options to core's {@link InitOptions} for JSON serialization.
+ * `scrubUrl` is intentionally absent here — it is a function and cannot survive
+ * `JSON.stringify`, so it is threaded separately to {@link buildRuntime}.
+ */
 export function resolveOptions(options: TaktOptions = {}): InitOptions {
   return {
     domain: options.domain,
@@ -42,5 +64,10 @@ export function resolveOptions(options: TaktOptions = {}): InitOptions {
     respectDnt: options.respectDnt ?? true,
     excludeLocalhost: options.excludeLocalhost ?? true,
     auto: options.spa ?? true,
+    enabled: options.enabled,
+    sampleRate: options.sampleRate,
+    trackQuery: options.trackQuery,
+    queryParams: options.queryParams,
+    tagged: options.tagged,
   }
 }

@@ -128,6 +128,77 @@ describe('option resolution & defaults', () => {
   })
 })
 
+describe('advanced tracker options', () => {
+  it('serializes scalar advanced options into the JSON passed to init', () => {
+    const { content } = setup({
+      sampleRate: 0.5,
+      trackQuery: true,
+      queryParams: ['utm_source'],
+      enabled: false,
+      tagged: true,
+    })
+    expect(content).toContain('"sampleRate":0.5')
+    expect(content).toContain('"trackQuery":true')
+    expect(content).toContain('"queryParams":["utm_source"]')
+    expect(content).toContain('"enabled":false')
+    expect(content).toContain('"tagged":true')
+  })
+
+  it('forwards scalar advanced options through resolveOptions', () => {
+    const r = resolveOptions({
+      sampleRate: 0.5,
+      trackQuery: true,
+      queryParams: ['utm_source'],
+      enabled: false,
+      tagged: true,
+    })
+    expect(r.sampleRate).toBe(0.5)
+    expect(r.trackQuery).toBe(true)
+    expect(r.queryParams).toEqual(['utm_source'])
+    expect(r.enabled).toBe(false)
+    expect(r.tagged).toBe(true)
+  })
+
+  it('injects scrubUrl as raw JS outside the JSON via Object.assign', () => {
+    const { content } = setup({ scrubUrl: (u) => u.split('#')[0] })
+    // Raw function source is appended outside the JSON object literal.
+    expect(content).toContain('Object.assign(')
+    expect(content).toMatch(/scrubUrl:\s*\(u\)\s*=>\s*u\.split\("#"\)\[0\]/)
+    // The JSON portion is still <-escaped (no literal `<` reaches the HTML parser
+    // here, but the escaping pipeline must remain on the JSON half).
+    expect(content).not.toContain('</script>')
+  })
+
+  it('keeps the JSON <-escaping intact when scrubUrl is injected alongside a domain', () => {
+    const { content } = setup({
+      domain: '</script><x>',
+      scrubUrl: (u) => u,
+    })
+    expect(content).toContain('\\u003c')
+    expect(content).not.toContain('</script>')
+    expect(content).toContain('Object.assign(')
+  })
+
+  it('never emits a scrubUrl key inside the JSON object', () => {
+    const { content } = setup({ scrubUrl: (u) => u.split('#')[0] })
+    const json = content.match(/Object\.assign\((\{.*?\}),/s)?.[1]
+    expect(json).toBeDefined()
+    expect(json).not.toContain('scrubUrl')
+    expect(json).not.toContain('"scrubUrl"')
+  })
+
+  it('does not put scrubUrl into the JSON-bound resolved options', () => {
+    const r = resolveOptions({ scrubUrl: (u) => u })
+    expect('scrubUrl' in r).toBe(false)
+  })
+
+  it('emits a plain init(<json>) when scrubUrl is absent', () => {
+    const { content } = setup({ sampleRate: 0.25 })
+    expect(content).not.toContain('Object.assign(')
+    expect(content).toContain('init(o)')
+  })
+})
+
 describe('injection safety', () => {
   it('escapes a domain that tries to break out of the string literal', () => {
     const evil = '";evil()//'
