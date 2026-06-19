@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import takt from '../src/index'
 import { takt as namedTakt } from '../src/integration'
-import { resolveOptions } from '../src/options'
+import { resolveOptions, assertNoScrubUrl } from '../src/options'
 import { buildRuntime } from '../src/runtime'
 
 function setup(options?: Parameters<typeof takt>[0]) {
@@ -196,6 +196,26 @@ describe('advanced tracker options', () => {
     const { content } = setup({ sampleRate: 0.25 })
     expect(content).not.toContain('Object.assign(')
     expect(content).toContain('init(o)')
+  })
+})
+
+// The <Takt /> component (Takt.astro) calls assertNoScrubUrl in its frontmatter
+// before serializing props as a JSON data island. The component itself can't be
+// rendered in this node/vitest harness (it's exercised by Playwright in e2e/),
+// so the guard is unit-tested here directly via the helper the component calls.
+describe('component scrubUrl guard (assertNoScrubUrl)', () => {
+  it('throws when scrubUrl is provided, pointing to the integration', () => {
+    expect(() => assertNoScrubUrl({ scrubUrl: (u) => u })).toThrow(/scrubUrl/)
+    expect(() => assertNoScrubUrl({ scrubUrl: (u) => u })).toThrow(/integration/)
+  })
+
+  it('passes for the empty options object and undefined', () => {
+    expect(() => assertNoScrubUrl()).not.toThrow()
+    expect(() => assertNoScrubUrl({})).not.toThrow()
+  })
+
+  it('passes when other options are present but scrubUrl is absent', () => {
+    expect(() => assertNoScrubUrl({ domain: 'example.com', sampleRate: 0.5 })).not.toThrow()
   })
 })
 

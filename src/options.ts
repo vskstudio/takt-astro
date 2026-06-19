@@ -42,10 +42,30 @@ export interface TaktOptions {
    * MUST be a self-contained function: it is stringified at build time and
    * re-evaluated in the browser, so it cannot reference closure/outer-scope
    * variables. Never build it from user input.
+   *
+   * Integration-only: a function cannot survive the `<Takt />` component's
+   * JSON data island, so it is supported solely via the `takt()` integration in
+   * `astro.config`. Passing it to `<Takt />` throws — see {@link assertNoScrubUrl}.
    */
   scrubUrl?: (url: string) => string
   /** Auto-track elements marked with `data-takt-event`. */
   tagged?: boolean
+}
+
+/**
+ * Guard the `<Takt />` component path against `scrubUrl`. The component
+ * serializes its config as a JSON data island (`JSON.stringify` → `JSON.parse`),
+ * which silently drops functions — so accepting `scrubUrl` there would be a
+ * silent no-op. Fail fast at build time and point to the integration, which
+ * embeds `scrubUrl` as build-time JS instead.
+ */
+export function assertNoScrubUrl(options: TaktOptions = {}): void {
+  if (options.scrubUrl !== undefined) {
+    throw new Error(
+      "Takt: scrubUrl is a function and cannot be serialized into the <Takt /> component's config. " +
+        'Use the Takt integration in astro.config instead (it embeds scrubUrl as build-time JS).',
+    )
+  }
 }
 
 /**
