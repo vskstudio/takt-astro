@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import takt from '../src/index'
 import { takt as namedTakt } from '../src/integration'
-import { resolveOptions } from '../src/options'
+import { resolveOptions, assertNoScrubUrl } from '../src/options'
 import { buildRuntime } from '../src/runtime'
 
 function setup(options?: Parameters<typeof takt>[0]) {
@@ -125,6 +125,97 @@ describe('option resolution & defaults', () => {
   it('always serializes auto:false in the runtime (Astro drives pageviews itself)', () => {
     const { content } = setup()
     expect(content).toContain('"auto":false')
+  })
+})
+
+describe('advanced tracker options', () => {
+  it('serializes scalar advanced options into the JSON passed to init', () => {
+    const { content } = setup({
+      sampleRate: 0.5,
+      trackQuery: true,
+      queryParams: ['utm_source'],
+      enabled: false,
+      tagged: true,
+    })
+    expect(content).toContain('"sampleRate":0.5')
+    expect(content).toContain('"trackQuery":true')
+    expect(content).toContain('"queryParams":["utm_source"]')
+    expect(content).toContain('"enabled":false')
+    expect(content).toContain('"tagged":true')
+  })
+
+  it('forwards scalar advanced options through resolveOptions', () => {
+    const r = resolveOptions({
+      sampleRate: 0.5,
+      trackQuery: true,
+      queryParams: ['utm_source'],
+      enabled: false,
+      tagged: true,
+    })
+    expect(r.sampleRate).toBe(0.5)
+    expect(r.trackQuery).toBe(true)
+    expect(r.queryParams).toEqual(['utm_source'])
+    expect(r.enabled).toBe(false)
+    expect(r.tagged).toBe(true)
+  })
+
+  it('injects scrubUrl as raw JS outside the JSON via Object.assign', () => {
+    const { content } = setup({ scrubUrl: (u) => u.split('#')[0] })
+    // Raw function source is appended outside the JSON object literal.
+    expect(content).toContain('Object.assign(')
+    expect(content).toMatch(/scrubUrl:\s*\(u\)\s*=>\s*u\.split\("#"\)\[0\]/)
+    // The JSON portion is still <-escaped (no literal `<` reaches the HTML parser
+    // here, but the escaping pipeline must remain on the JSON half).
+    expect(content).not.toContain('</script>')
+  })
+
+  it('keeps the JSON <-escaping intact when scrubUrl is injected alongside a domain', () => {
+    const { content } = setup({
+      domain: '</script><x>',
+      scrubUrl: (u) => u,
+    })
+    expect(content).toContain('\\u003c')
+    expect(content).not.toContain('</script>')
+    expect(content).toContain('Object.assign(')
+  })
+
+  it('never emits a scrubUrl key inside the JSON object', () => {
+    const { content } = setup({ scrubUrl: (u) => u.split('#')[0] })
+    const json = content.match(/Object\.assign\((\{.*?\}),/s)?.[1]
+    expect(json).toBeDefined()
+    expect(json).not.toContain('scrubUrl')
+    expect(json).not.toContain('"scrubUrl"')
+  })
+
+  it('does not put scrubUrl into the JSON-bound resolved options', () => {
+    const r = resolveOptions({ scrubUrl: (u) => u })
+    expect('scrubUrl' in r).toBe(false)
+  })
+
+  it('emits a plain init(<json>) when scrubUrl is absent', () => {
+    const { content } = setup({ sampleRate: 0.25 })
+    expect(content).not.toContain('Object.assign(')
+    expect(content).toContain('init(o)')
+  })
+})
+
+// The <Takt /> component (Takt.astro) calls assertNoScrubUrl in its frontmatter
+// before serializing props as a JSON data island. The component itself can't be
+// rendered in this node/vitest harness (it's exercised by Playwright in e2e/),
+// so the guard is unit-tested here directly via the helper the component calls.
+describe('component scrubUrl guard (assertNoScrubUrl)', () => {
+  it('throws when scrubUrl is provided, pointing to the integration', () => {
+    expect(() => assertNoScrubUrl({ scrubUrl: (u) => u })).toThrow(/scrubUrl/)
+    expect(() => assertNoScrubUrl({ scrubUrl: (u) => u })).toThrow(/integration/)
+  })
+
+  it('passes for the empty options object and undefined', () => {
+    expect(() => assertNoScrubUrl()).not.toThrow()
+    expect(() => assertNoScrubUrl({})).not.toThrow()
+  })
+
+  it('passes when other options are present but scrubUrl is absent', () => {
+    expect(() => assertNoScrubUrl({ domain: 'example.com', sampleRate: 0.5 })).not.toThrow()
   })
 })
 

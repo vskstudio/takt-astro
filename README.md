@@ -39,7 +39,7 @@ import Takt from '@vskstudio/takt-astro/Takt.astro'
 
 ## Options
 
-Both the integration and the component accept the same options:
+Both the integration and the component accept the same options, with one exception: `scrubUrl` is a function and works **only via the integration** (see the note below).
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -52,6 +52,23 @@ Both the integration and the component accept the same options:
 | `spa` | `boolean` | `true` | Track client-side navigations. |
 | `respectDnt` | `boolean` | `true` | Suppress events when Do Not Track is on. |
 | `excludeLocalhost` | `boolean` | `true` | Suppress events on localhost / private IPs. |
+| `enabled` | `boolean` | `true` | Master kill switch — set `false` to suppress every event. |
+| `sampleRate` | `number` | `1` | Fraction of visitors to track, `0`–`1`. |
+| `trackQuery` | `boolean` | `false` | Send the full query string with pageviews instead of stripping it. |
+| `queryParams` | `string[]` | – | Whitelist of query params to keep when `trackQuery` is off. |
+| `scrubUrl` | `(url: string) => string` | – | **Integration only.** Rewrite each URL before it is sent (e.g. strip a fragment or PII). See the note below. |
+| `tagged` | `boolean` | `false` | Auto-track elements marked with `data-takt-event`. |
+
+> **`scrubUrl` note.** Unlike the other options, `scrubUrl` is a **function**, so it
+> is supported **only via the integration**, not the `<Takt />` component. The
+> integration serializes config into a build-time runtime string, so `scrubUrl` is
+> stringified with `.toString()` and re-evaluated in the browser. It MUST be a
+> **self-contained** function — no closure variables or outer-scope references — and
+> must be **developer-controlled**: never build it from user input.
+>
+> The `<Takt />` component serializes its config as a JSON data island, which cannot
+> carry a function — so passing `scrubUrl` to `<Takt />` **throws at build time**
+> rather than silently doing nothing. Use the integration if you need it.
 
 ## View Transitions
 

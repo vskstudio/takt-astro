@@ -1,9 +1,14 @@
 ---
 // Import from the built output: the published package ships dist/ + this file,
 // not src/, so a src import would break on install.
-import { resolveOptions, type TaktOptions } from './dist/index.js'
+import { resolveOptions, assertNoScrubUrl, type TaktOptions } from './dist/index.js'
 
 type Props = TaktOptions
+
+// Fail fast: scrubUrl is a function and cannot survive the JSON data island
+// below, so accepting it here would be a silent no-op. The integration path
+// supports it (embeds it as build-time JS); the component cannot.
+assertNoScrubUrl(Astro.props)
 
 // Options travel as a JSON data island, NOT interpolated into JS, so a domain or
 // endpoint containing `</script>`/quotes can't break out. `<` is escaped so the
