@@ -1,6 +1,6 @@
 {
   "name": "@vskstudio/takt-astro",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Astro integration for Takt privacy-friendly analytics",
   "license": "MIT",
   "author": "VSK Studio",
@@ -56,7 +56,7 @@
     "release": "pnpm build && changeset publish"
   },
   "peerDependencies": {
-    "@vskstudio/takt-core": ">=0.5.0",
+    "@vskstudio/takt-core": ">=0.6.0",
     "astro": ">=4"
   },
   "devDependencies": {
