@@ -37,6 +37,8 @@ export interface TaktOptions {
   trackQuery?: boolean
   /** Whitelist of query params to keep when `trackQuery` is off. */
   queryParams?: string[]
+  /** Path prefixes never tracked, e.g. `['/app','/account']`. Segment-bounded: `'/app'` matches `'/app'` and `'/app/…'` but not `'/application'`. */
+  exclude?: string[]
   /**
    * Rewrite each URL before it is sent (e.g. strip a fragment or PII).
    * MUST be a self-contained function: it is stringified at build time and
@@ -88,6 +90,7 @@ export function resolveOptions(options: TaktOptions = {}): InitOptions {
     sampleRate: options.sampleRate,
     trackQuery: options.trackQuery,
     queryParams: options.queryParams,
+    exclude: options.exclude,
     tagged: options.tagged,
   }
 }
