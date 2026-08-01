@@ -8,9 +8,11 @@ Astro integration for [Takt](https://github.com/vskstudio/takt-core), privacy-fr
 pnpm add @vskstudio/takt-astro @vskstudio/takt-core
 ```
 
+Both are peer dependencies: `astro` (`>=4`) and `@vskstudio/takt-core` (`>=0.8.1`).
+
 ## Usage
 
-Pick **one** of the two paths below — not both. Both boot core's default instance, so combining them would just re-initialise.
+Pick **one** of the two paths below — not both. Both boot core's default instance, guarded by a shared `window.__takt` flag: installing both does not double-count (the second boot is skipped), but it ships the runtime twice for nothing.
 
 ### Integration (recommended)
 
@@ -44,21 +46,21 @@ Both the integration and the component accept the same options, with one excepti
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `domain` | `string` | `location.hostname` | Site identifier sent with every event. |
-| `endpoint` | `string` | `/api/event` | Ingestion endpoint. |
+| `endpoint` | `string` | `https://taktlytics.com/api/event` | Ingestion endpoint. Pass `/api/event` for a same-origin first-party proxy. |
 | `scriptOrigin` | `string` | – | First-party origin to derive the endpoint from (`{origin}/api/event`) — your Takt domain or a custom domain to dodge ad-blockers (endpoint wins over it). |
 | `outbound` | `boolean` | `false` | Auto-track outbound link clicks. |
-| `files` | `boolean` | `false` | Auto-track file downloads. |
+| `files` | `boolean` | `false` | Auto-track file downloads, using core's default extension list (this integration does not expose an extension override). |
 | `track404` | `boolean` | `false` | Report a `404` event when the page is an error page (`[data-takt-404]` / `<meta name="takt:404">` marker, or a 404 HTTP status). |
 | `spa` | `boolean` | `true` | Track client-side navigations. |
 | `respectDnt` | `boolean` | `true` | Suppress events when Do Not Track is on. |
 | `excludeLocalhost` | `boolean` | `true` | Suppress events on localhost / private IPs. |
 | `enabled` | `boolean` | `true` | Master kill switch — set `false` to suppress every event. |
 | `sampleRate` | `number` | `1` | Fraction of visitors to track, `0`–`1`. |
-| `trackQuery` | `boolean` | `false` | Send the full query string with pageviews instead of stripping it. |
-| `queryParams` | `string[]` | – | Whitelist of query params to keep when `trackQuery` is off. |
+| `trackQuery` | `boolean` | `false` | Keep the full query string and hash instead of stripping them. Wins over `queryParams`. |
+| `queryParams` | `string[]` | – | Allowlist of query params to keep, applied only when `trackQuery` is off. |
 | `exclude` | `string[]` | – | Path prefixes never tracked, e.g. `['/app', '/account']` (segment-bounded, checked at send time). |
 | `scrubUrl` | `(url: string) => string` | – | **Integration only.** Rewrite each URL before it is sent (e.g. strip a fragment or PII). See the note below. |
-| `tagged` | `boolean` | `false` | Auto-track elements marked with `data-takt-event`. |
+| `tagged` | `boolean` | `false` | Auto-track clicks on `[data-takt-event]` elements; `data-takt-prop-*` attributes become event props. |
 
 > **`scrubUrl` note.** Unlike the other options, `scrubUrl` is a **function**, so it
 > is supported **only via the integration**, not the `<Takt />` component. The
@@ -77,12 +79,16 @@ Astro's client router runs several history operations per navigation (scroll-res
 
 ## Custom events
 
-Re-exported from core for convenience:
+`track`, `pageview`, `optOut` and `optIn` are re-exported from core for convenience. They act on core's default instance, which only exists in the browser once the injected runtime has booted — so call them from a client-side `<script>`, not from `.astro` frontmatter (where they are silent no-ops):
 
-```js
-import { track } from '@vskstudio/takt-astro'
-
-track('Signup', { revenue: { amount: '9.00', currency: 'USD' } })
+```astro
+<button id="signup">Sign up</button>
+<script>
+  import { track } from '@vskstudio/takt-astro'
+  document.getElementById('signup')?.addEventListener('click', () => {
+    track('Signup', { props: { plan: 'pro' }, revenue: { amount: '9.00', currency: 'USD' } })
+  })
+</script>
 ```
 
 ## Widgets
@@ -98,18 +104,40 @@ import Embed from '@vskstudio/takt-astro/Embed.astro'
 <Embed domain="example.com" theme="dark" />
 ```
 
-`Badge` renders an `<img>` (props: `domain`, `variant`, `glyph`, `lang`, `host`). Its `alt` defaults to `"takt"` and can be overridden. `Embed` renders an `<iframe>` (props: `domain`, `theme`, `lang`, `host`, `width`, `height`, `title`); the iframe is sandboxed (`allow-scripts allow-same-origin`) and ships a fixed `referrerpolicy="strict-origin-when-cross-origin"` — both are locked and cannot be weakened by a consumer. Extra attributes pass through to the underlying element, but the built `src` is locked and cannot be overridden. The optional `host` must be an absolute `http(s)` URL — core validates it and throws on anything else (e.g. a `javascript:` URL), and reduces it to its origin (dropping path/query). An empty `host` resolves same-origin.
+`Badge` renders an `<img>` (props: `domain` — required —, `variant` `a` | `b` | `d`, `glyph` `unplug` | `dash` | `off` | `eyeoff`, `lang` `fr` | `en`, `host`). Its `alt` defaults to `"takt"` and can be overridden; `loading="lazy"` and `decoding="async"` are applied after your attributes and cannot.
+
+`Embed` renders an `<iframe>` (props: `domain` — required —, `theme` `light` | `dark` | `auto`, `lang`, `host`, plus `width` = `404`, `height` = `264`, `title` = `"takt"`); the iframe is sandboxed (`allow-scripts allow-same-origin`) and ships a fixed `referrerpolicy="strict-origin-when-cross-origin"`, a `loading="lazy"` and a zero border — all applied after your attributes, so a consumer cannot weaken them. Extra attributes pass through to the underlying element, but the built `src` is locked and cannot be overridden. The optional `host` must be an absolute `http(s)` URL — core validates it and throws on anything else (e.g. a `javascript:` URL), and reduces it to its origin (dropping path/query). Omitting `host` falls back to the hosted Takt origin (`https://taktlytics.com`), not to the current origin.
 
 ## Public stats
 
 `createStats` (re-exported from core) reads public analytics:
 
+Every method takes the domain first and the params second — the domain is optional once `createStats` is bound to one:
+
 ```js
-import { createStats } from '@vskstudio/takt-astro'
+import { createStats, PublicApiError } from '@vskstudio/takt-astro'
 
 const stats = createStats({ domain: 'example.com' })
-const summary = await stats.summary({ period: '7d' })
+
+try {
+  const summary = await stats.summary(undefined, { period: '7d' })
+  const rows = await stats.breakdown('page', undefined, { period: '7d' })
+  const live = await stats.realtime()
+} catch (err) {
+  if (err instanceof PublicApiError) console.error(err.status, err.message)
+}
 ```
+
+## Public exports
+
+From `@vskstudio/takt-astro`:
+
+- `default` / `takt` — the integration factory (same function under both names)
+- `resolveOptions`, `assertNoScrubUrl`, `buildRuntime` — the internals the `.astro` components build on, exported so you can drive the runtime yourself
+- Re-exported from core: `track`, `pageview`, `optOut`, `optIn`, `createStats`, `PublicApiError`, `badgeUrl`, `embedUrl`
+- Types: `TaktOptions`, plus `InitOptions`, `TrackOptions`, `BadgeOptions`, `EmbedOptions`, `BadgeVariant`, `BadgeGlyph`, `EmbedTheme`, `WidgetLang`, `StatsClient`, `StatsClientOptions`, `StatsParams`, `StatsPeriod`, `StatsDimension`, `StatsMetrics`, `StatsSummary`, `StatsPoint`, `StatsTimeseries`, `StatsBreakdownRow`, `StatsBreakdown`, `StatsRealtime` re-exported from core
+
+Component subpaths: `@vskstudio/takt-astro/Takt.astro`, `/Badge.astro`, `/Embed.astro`.
 
 ## License
 
