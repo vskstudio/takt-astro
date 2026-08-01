@@ -1,5 +1,11 @@
 # @vskstudio/takt-astro
 
+## 0.6.2
+
+### Patch Changes
+
+- Realign the README with the package code: the autocapture selector is `[data-takt-event]`, the default ingest endpoint is the hosted Takt collect URL, and the documented component props match what `Takt.astro` actually accepts. No runtime change.
+
 ## 0.5.1
 
 ### Patch Changes
